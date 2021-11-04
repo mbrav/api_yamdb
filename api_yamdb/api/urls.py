@@ -1,16 +1,14 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from rest_framework_simplejwt.views import (TokenObtainPairView,
-                                            TokenRefreshView)
 
-from users.views import UserViewSet
+from users.views import UserViewSet, YamDBRegisterView, YamDBTokenRefreshView
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='users')
 
 urlpatterns = [
-    path('v1/auth/signup/', TokenObtainPairView.as_view(),
+    path('v1/auth/signup/', YamDBRegisterView.as_view(),
          name='token_obtain_pair'),
-    path('v1/auth/token/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('v1/auth/token/', YamDBTokenRefreshView.as_view(), name='token_refresh'),
     path('v1/', include(router.urls)),
 ]
