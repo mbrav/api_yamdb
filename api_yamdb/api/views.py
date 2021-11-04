@@ -5,7 +5,7 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAdminUser
 
 from .permissions import IsAuthorOrReadOnlyPermission, ReadOnly
-from .serializers import UserSerializer
+from .serializers import UserSerializer, CommentSerializer
 
 User = get_user_model()
 
@@ -19,4 +19,6 @@ class UserViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
 
 
-1
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+
