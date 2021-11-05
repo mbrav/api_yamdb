@@ -1,5 +1,15 @@
 # Чтобы использовать:
 # ./manage.py csv_import
+#
+# Чтобы вывести информацию
+# Но не записывать в ДБ
+# ./manage.py csv_import --run_only
+#
+# Указать имя таблицы
+# ./manage.py csv_import --table users
+#
+# Помощь
+# ./manage.py csv_import --help
 
 import csv
 
@@ -8,25 +18,6 @@ from django.core.management.base import BaseCommand
 from reviews.models import Category, Comment, Genres, Rating, Review, Title
 
 User = get_user_model()
-
-
-def import_from_csv(csv_file, output=False):
-    file = open(csv_file, 'r',)
-    csv_reader = csv.reader(file, delimiter=',')
-    line_count = 0
-    if output:
-        for row in csv_reader:
-            if line_count == 0:
-                print('\t'.join(row))
-                line_count += 1
-            else:
-                output = ''
-                for cell in row:
-                    output += f'{cell} \t'
-                print(output)
-                line_count += 1
-        print(f'Processed {line_count} lines.')
-    return csv_reader
 
 
 def createUsers(csv_object):
@@ -111,39 +102,71 @@ files = {
 
 class Command(BaseCommand):
 
-    help = "Загружает CSV фаилы заказчика в модели"
+    help = """Загружает CSV фаилы заказчика в модели"""
+
+    def import_from_csv(self, csv_file, output=False):
+
+        file = open(csv_file, 'r',)
+        csv_reader = csv.reader(file, delimiter=',')
+        line_count = 0
+        if output:
+            self.stdout.write(self.style.MIGRATE_HEADING(
+                f'\nТаблицы в фаиле "{csv_file}".'))
+            for row in csv_reader:
+                if line_count == 0:
+                    self.stdout.write(self.style.SQL_FIELD('\t'.join(row)))
+                    line_count += 1
+                else:
+                    out = ''
+                    for cell in row:
+                        out += f'{cell} \t'
+                        self.stdout.write(self.style.SQL_TABLE(out))
+                    line_count += 1
+            self.stdout.write(self.style.SQL_KEYWORD(
+                f'Всего {line_count} записей.\n'))
+        return csv_reader
 
     def add_arguments(self, parser):
         parser.add_argument('-r', '--run_only', action='store_true',
-                            help='Ничего не делать с базой, только пробежка', )
+                            help='Ничего не делать с базой, только пробежка.', )
+        parser.add_argument('-t', '--table', type=str,
+                            help=f'Указать таблицу название таблицы. Доступны: {", ".join(files.keys())}.')
 
     def handle(self, *args, **kwargs):
 
-        run_only = kwargs['run_only']
+        run_only = kwargs['run_only'] == True
+        table = kwargs['table']
 
         self.stdout.write(self.style.MIGRATE_HEADING(
             'Имортируем данные заказчика'))
 
-        user_csv = import_from_csv(files['users'], output=run_only)
-        category_csv = import_from_csv(files['category'], output=run_only)
-        titles_csv = import_from_csv(files['titles'], output=run_only)
-        review_csv = import_from_csv(files['review'], output=run_only)
-        genre_title_csv = import_from_csv(
-            files['genre_title'], output=run_only)
-        comments_csv = import_from_csv(files['comments'], output=run_only)
+        if table:
+            specified_csv = self.import_from_csv(files[table], output=run_only)
+            self.stdout.write(self.style.WARNING(files[table]))
+            createUsers(csv_object=specified_csv)
+        else:
+            user_csv = self.import_from_csv(files['users'], output=run_only)
+            category_csv = self.import_from_csv(
+                files['category'], output=run_only)
+            titles_csv = self.import_from_csv(files['titles'], output=run_only)
+            review_csv = self.import_from_csv(files['review'], output=run_only)
+            genre_title_csv = self.import_from_csv(
+                files['genre_title'], output=run_only)
+            comments_csv = self.import_from_csv(
+                files['comments'], output=run_only)
 
-        if not run_only:
-            self.stdout.write(self.style.WARNING('createUsers'))
-            createUsers(csv_object=user_csv)
-            self.stdout.write(self.style.WARNING('createCategory'))
-            createCategory(csv_object=category_csv)
-            # self.stdout.write(self.style.WARNING('createTitles'))
-            # createTitles(csv_object=titles_csv)
-            # self.stdout.write(self.style.WARNING('createReview'))
-            # createReview(csv_object=review_csv)
-            # self.stdout.write(self.style.WARNING('createGenreTitle'))
-            # createGenreTitle(csv_object=genre_title_csv)
-            # self.stdout.write(self.style.WARNING('createComments'))
-            # createComments(csv_object=comments_csv)
+            if not run_only:
+                self.stdout.write(self.style.WARNING('createUsers'))
+                createUsers(csv_object=user_csv)
+                self.stdout.write(self.style.WARNING('createCategory'))
+                createCategory(csv_object=category_csv)
+                # self.stdout.write(self.style.WARNING('createTitles'))
+                # createTitles(csv_object=titles_csv)
+                # self.stdout.write(self.style.WARNING('createReview'))
+                # createReview(csv_object=review_csv)
+                # self.stdout.write(self.style.WARNING('createGenreTitle'))
+                # createGenreTitle(csv_object=genre_title_csv)
+                # self.stdout.write(self.style.WARNING('createComments'))
+                # createComments(csv_object=comments_csv)
 
         self.stdout.write(self.style.SUCCESS('Иморт Завершён!'))
