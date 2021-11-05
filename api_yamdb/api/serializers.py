@@ -18,3 +18,16 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'text', 'author', 'pub_date')
         model = Comment
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True,
+        required=False,
+        default=serializers.CurrentUserDefault()
+    )
+
+    class Meta:
+        model = Review
+        exclude = ('title',)
