@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from datetime import date
 from users.models import User
@@ -54,21 +55,21 @@ class Title(models.Model):
 
 class Review(models.Model):
     text = models.TextField(
-        verbose_name='review text',
+        verbose_name='Текст отзыва',
     )
     author = models.ForeignKey(
-        verbose_name='review author',
+        verbose_name='Автор отзыва',
         to=User,
         on_delete=models.CASCADE,
         related_name='reviews',
     )
     pub_date = models.DateTimeField(
-        verbose_name='date of publication',
+        verbose_name='Дата публикации',
         auto_now_add=True)
 
     class Meta:
-        verbose_name = 'Review'
-        verbose_name_plural = 'Reviews'
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
 
     def __str__(self):
         return self.text
@@ -76,28 +77,40 @@ class Review(models.Model):
 
 class Comment(models.Model):
     text = models.TextField(
-        verbose_name='comment text'
+        verbose_name='Текст комментария'
     )
     author = models.ForeignKey(
-        verbose_name='comment author',
+        verbose_name='Автор комментария',
         to=User,
         on_delete=models.CASCADE,
-        related_name='comments'
+        related_name='Комментарии'
     )
     pub_date = models.DateTimeField(
-        verbose_name='date of publication',
+        verbose_name='Дата публикации',
         auto_now_add=True)
     review = models.ForeignKey(
-        verbose_name='comment to review',
+        verbose_name='Обзор комментариев',
         to=Review,
         on_delete=models.CASCADE,
         related_name='comments'
     )
 
     class Meta:
-        verbose_name = 'Comment'
-        verbose_name_plural = 'Comments'
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
 
 
 class Rating(models.Model):
-    text = models.TextField()
+    score = models.PositiveSmallIntegerField(
+        verbose_name='Рейтинг',
+        help_text='Введите от 1 до 10',
+        default=10,
+        validators=[
+            MinValueValidator(1, message='Оценка не может быть ниже 1.'),
+            MaxValueValidator(10, message='Оценка не может быть больше 10.')
+        ],
+    )
+    pub_date = models.DateTimeField(
+        verbose_name='Дата публикации',
+        auto_now_add=True
+    )
