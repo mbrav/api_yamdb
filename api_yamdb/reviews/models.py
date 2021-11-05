@@ -53,41 +53,50 @@ class Title(models.Model):
 
 
 class Review(models.Model):
-
-    title = models.ForeignKey(
-        Title,
-        on_delete=models.CASCADE,
-        related_name='reviews'
+    text = models.TextField(
+        verbose_name='review text',
     )
     author = models.ForeignKey(
-        User,
+        verbose_name='review author',
+        to=User,
         on_delete=models.CASCADE,
-        related_name='reviews'
+        related_name='reviews',
     )
-    score = models.IntegerField()
     pub_date = models.DateTimeField(
-        'Дата публикации ревью',
-        auto_now_add=True,
-        blank=True
-    )
+        verbose_name='date of publication',
+        auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Review'
+        verbose_name_plural = 'Reviews'
+
+    def __str__(self):
+        return self.text
 
 
 class Comment(models.Model):
-
-    text = models.TextField()
+    text = models.TextField(
+        verbose_name='comment text'
+    )
     author = models.ForeignKey(
-        User,
+        verbose_name='comment author',
+        to=User,
         on_delete=models.CASCADE,
         related_name='comments'
     )
     pub_date = models.DateTimeField(
-        'Дата публикации коммента',
-        auto_now_add=True,
-        blank=True
+        verbose_name='date of publication',
+        auto_now_add=True)
+    review = models.ForeignKey(
+        verbose_name='comment to review',
+        to=Review,
+        on_delete=models.CASCADE,
+        related_name='comments'
     )
 
     class Meta:
-        ordering = ('-pub_date',)
+        verbose_name = 'Comment'
+        verbose_name_plural = 'Comments'
 
 
 class Rating(models.Model):

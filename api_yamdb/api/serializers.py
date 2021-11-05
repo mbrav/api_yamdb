@@ -3,7 +3,7 @@ from rest_framework.relations import SlugRelatedField
 
 from reviews.models import Comment
 from users.models import User
-from reviews.models import Comment, Title, Genres, Category
+from reviews.models import Comment, Title, Genres, Category, Review
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -38,3 +38,16 @@ class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genres
         fields = '__all__'
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True,
+        required=False,
+        default=serializers.CurrentUserDefault()
+    )
+
+    class Meta:
+        model = Review
+        exclude = ('title',)
