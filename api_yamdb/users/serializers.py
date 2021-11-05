@@ -9,9 +9,24 @@ class RegisterSerializer(serializers.ModelSerializer):
         required=True,
         validators=[UniqueValidator(queryset=User.objects.all())]
     )
-
     username = serializers.CharField(
-        write_only=True, required=True)
+        required=True,
+        validators=[UniqueValidator(queryset=User.objects.all())]
+    )
+
+    def validate(self, attrs):
+        if attrs['username'] == 'me':
+            raise serializers.ValidationError(
+                {"username": "Username cannot be 'me'"})
+        return attrs
+
+    def create(self, validated_data):
+        user = User.objects.create(
+            username=validated_data['username'],
+            email=validated_data['email'],
+        )
+        user.save()
+        return user
 
     class Meta:
         model = User
@@ -20,23 +35,6 @@ class RegisterSerializer(serializers.ModelSerializer):
             'username': {'required': True},
             'email': {'required': True}
         }
-
-    def validate(self, attrs):
-        if attrs['username'] == 'me':
-            raise serializers.ValidationError(
-                {"username": "Username cannot be 'me'"})
-
-        return attrs
-
-    def create(self, validated_data):
-        user = User.objects.create(
-            username=validated_data['username'],
-            email=validated_data['email']
-        )
-
-        user.save()
-
-        return user
 
 
 class UserSerializer(serializers.ModelSerializer):
