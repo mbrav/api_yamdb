@@ -7,7 +7,7 @@ from .views import TitleViewSet, CategoryViewSet, GenreViewSet, CommentViewSet
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='users')
-router.register(r'title', TitleViewSet, basename='title')
+router.register(r'titles', TitleViewSet, basename='title')
 router.register(r'categories', CategoryViewSet, basename='category')
 router.register(r'genres', GenreViewSet, basename='genre')
 router.register(
