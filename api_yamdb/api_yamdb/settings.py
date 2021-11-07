@@ -96,6 +96,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # custom user model
 # https://stackoverflow.com/a/53029234
+# https://habr.com/ru/post/538040/
 AUTH_USER_MODEL = 'users.User'
 
 
@@ -107,7 +108,7 @@ CORS_ALLOWED_ORIGINS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
