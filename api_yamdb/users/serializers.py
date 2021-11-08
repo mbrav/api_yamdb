@@ -25,6 +25,9 @@ class RegisterSerializer(serializers.ModelSerializer):
             username=validated_data['username'],
             email=validated_data['email'],
         )
+
+        # Делаем юзера неактивным, пока он не подвердит свой токен
+        user.is_active = False
         user.save()
         return user
 
@@ -44,28 +47,17 @@ class UserLoginSerializer(serializers.Serializer):
     )
     confirmation_code = serializers.CharField(
         required=True,
-        write_only=True
     )
 
     def validate(self, attrs):
         username = attrs['username']
-        conf_code = attrs['confirmation_code']
 
         user = User.objects.filter(username=username)[0]
-
         if user is None:
             raise serializers.ValidationError(
-                {'username': f'A user with username "{username}" is not found.'})
+                {'username': f'Юзер с именем "{username}" не найден.'})
 
         return attrs
-
-    # class Meta:
-    #     model = User
-    #     fields = ['username', 'confirmation_code']
-    #     extra_kwargs = {
-    #         'username': {'required': True},
-    #         'confirmation_code': {'required': True}
-    #     }
 
 
 class UserSerializer(serializers.ModelSerializer):

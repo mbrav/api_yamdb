@@ -1,11 +1,12 @@
-from rest_framework.authtoken.models import Token
 from django.contrib.auth import get_user_model
-from rest_framework import generics, viewsets, status
+from rest_framework import generics, status, viewsets
+from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny, IsAdminUser
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
+
+from .serializers import (RegisterSerializer, UserLoginSerializer,
+                          UserSerializer)
 from .utils import Util
-from .serializers import RegisterSerializer, UserLoginSerializer, UserSerializer
 
 User = get_user_model()
 
@@ -19,7 +20,19 @@ class YamDBTokenRefreshView(generics.RetrieveAPIView):
         serializer.is_valid(raise_exception=True)
 
         username = serializer.data['username']
+        conf_code = serializer.data['confirmation_code']
         user = User.objects.get(username=username)
+
+        if user is not None and Util.token_generator.check_token(user, conf_code):
+            # Делаем юзера активным
+            user.is_active = True
+            user.save()
+        else:
+            response = {
+                'confirmation_code': 'Токен не валидный'
+            }
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
         token = Token.objects.get_or_create(user=user)
         response = {
             'token': token[0].key,
@@ -39,7 +52,7 @@ class YamDBRegisterView(generics.CreateAPIView):
 
         user_data = serializer.data
         user = User.objects.get(email=user_data['email'])
-        token = RefreshToken.for_user(user).access_token
+        token = Util.token_generator.make_token(user)
 
         email_body = 'Добрый день, ' + \
             user.username + '\n' + \
