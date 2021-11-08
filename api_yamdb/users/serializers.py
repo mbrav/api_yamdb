@@ -41,7 +41,6 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class UserLoginSerializer(serializers.Serializer):
-
     username = serializers.CharField(
         required=True
     )
@@ -49,19 +48,18 @@ class UserLoginSerializer(serializers.Serializer):
         required=True,
     )
 
-    def validate(self, attrs):
-        username = attrs['username']
-
-        user = User.objects.filter(username=username)[0]
-        if user is None:
-            raise serializers.ValidationError(
-                {'username': f'Юзер с именем "{username}" не найден.'})
-
-        return attrs
-
 
 class UserSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        required=True
+    )
+    email = serializers.EmailField(
+        required=True,
+    )
 
     class Meta:
         model = User
         fields = '__all__'
+        extra_kwargs = {
+            'password': {'required': False}
+        }

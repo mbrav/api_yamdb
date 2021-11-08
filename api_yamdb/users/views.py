@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny, IsAdminUser
@@ -21,7 +22,7 @@ class YamDBTokenRefreshView(generics.RetrieveAPIView):
 
         username = serializer.data['username']
         conf_code = serializer.data['confirmation_code']
-        user = User.objects.get(username=username)
+        user = get_object_or_404(User, username=username)
 
         if user is not None and Util.token_generator.check_token(user, conf_code):
             # Делаем юзера активным
