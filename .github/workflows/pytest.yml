@@ -27,7 +27,7 @@ jobs:
         pip install -r requirements.txt
     - name: Run Django Tests
       run: |
-        python manage.py test
+        python api_yamdb/manage.py test
     - name: Run Pytest
       run: |
         pytest
