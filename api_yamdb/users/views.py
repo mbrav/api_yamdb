@@ -46,7 +46,7 @@ class YamDBRegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = (AllowAny,)
 
-    def create(self, request, *args, **kwargs):
+    def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -75,4 +75,14 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = (IsAdminUser,)
     filter_backends = (filters.SearchFilter,)
+    lookup_field = 'username'
     search_fields = ('username',)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = None
+        if kwargs['username'] == 'me':
+            instance = User.objects.get(username=request.user.username)
+        else:
+            instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)

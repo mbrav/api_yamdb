@@ -17,7 +17,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs['username'] == 'me':
             raise serializers.ValidationError(
-                {"username": "Username cannot be 'me'"})
+                {"username": "Имя пользователя не может быть 'me'"})
         return attrs
 
     def create(self, validated_data):
@@ -57,10 +57,23 @@ class UserSerializer(serializers.ModelSerializer):
         required=True,
     )
 
+    def validate_username(self, username):
+        if User.objects.filter(username=username).exists():
+            raise serializers.ValidationError(
+                {'username': 'Пользователь с данным юзернеймом уже существует'})
+        return username
+
+    def validate_email(self, email):
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError(
+                {'email': 'Пользователь с данной почтой уже существует'})
+        return email
+
     class Meta:
         model = User
+        lookup_field = 'username'
         fields = ('username', 'email', 'role',
                   'first_name', 'last_name', 'bio')
         extra_kwargs = {
-            'password': {'required': False}
+            'password': {'required': False},
         }
