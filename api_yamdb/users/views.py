@@ -1,10 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, status, viewsets
+from rest_framework import generics, status, viewsets, filters
 from rest_framework.authtoken.models import Token
-from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 
+from api.permissions import AllowAny, IsAdminUser
 from .serializers import (RegisterSerializer, UserLoginSerializer,
                           UserSerializer)
 from .utils import Util
@@ -74,3 +74,5 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (IsAdminUser,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
