@@ -34,7 +34,8 @@ jobs:
         python api_yamdb/manage.py migrate
     - name: Run CSV-import script
       run: |
-        python api_yamdb/manage.py csv_import
+        cd api_yamdb
+        python manage.py csv_import
     - name: Run Pytest
       run: |
         pytest
