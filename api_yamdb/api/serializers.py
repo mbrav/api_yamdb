@@ -11,8 +11,8 @@ class CommentSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source='author.username')
 
     class Meta:
-        fields = ('id', 'text', 'author', 'pub_date')
         model = Comment
+        fields = ('id', 'text', 'author', 'pub_date')
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -42,12 +42,20 @@ class GenreSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
-        slug_field='username',
-        read_only=True,
-        required=False,
-        default=serializers.CurrentUserDefault()
+        slug_field='username', read_only=True
     )
+
+    def validate(self, data):
+        title = self.context.get('title')
+        request = self.context.get('request')
+        if (
+            request.method != 'PATCH' and
+            Review.objects.filter(title=title, author=request.user).exists()
+        ):
+            raise serializers.ValidationError('Оценка уже выставлена')
+        return data
 
     class Meta:
         model = Review
-        exclude = ('title',)
+        fields = '__all__'
+        extra_kwargs = {'title': {'required': False}}
