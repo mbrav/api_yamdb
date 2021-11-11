@@ -16,8 +16,10 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    category = SlugRelatedField(slug_field='slug', queryset=Category.objects.all())
-    genre = SlugRelatedField(slug_field='slug', queryset=Genres.objects.all(), many=True)
+    category = SlugRelatedField(slug_field='slug',
+                                queryset=Category.objects.all())
+    genre = SlugRelatedField(slug_field='slug', queryset=Genres.objects.all(),
+                             many=True)
 
     class Meta:
         model = Title
@@ -27,12 +29,13 @@ class TitleSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ('name','slug')
+        fields = ('name', 'slug')
+
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genres
-        fields = ('name','slug')
+        fields = ('name', 'slug')
 
 
 class ReviewSerializer(serializers.ModelSerializer):
