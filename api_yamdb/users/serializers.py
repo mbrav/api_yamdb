@@ -49,9 +49,9 @@ class UserLoginSerializer(serializers.Serializer):
     )
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserCreateSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
-        required=True
+        required=True,
     )
     email = serializers.EmailField(
         required=True,
@@ -77,3 +77,22 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'password': {'required': False},
         }
+
+
+class UserUpdateSerializer(UserCreateSerializer):
+    username = serializers.CharField(
+        required=False,
+    )
+    email = serializers.EmailField(
+        required=False,
+    )
+
+    def __init__(self, *args, **kwargs):
+        kwargs['partial'] = True
+        super(UserUpdateSerializer, self).__init__(*args, **kwargs)
+
+    def validate_username(self, username):
+        return username
+
+    def validate_email(self, email):
+        return email

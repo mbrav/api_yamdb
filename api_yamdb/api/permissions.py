@@ -28,9 +28,31 @@ class IsAdminOrReadOnly(permissions.BasePermission):
 
 
 class IsAdminUser(permissions.IsAdminUser):
-
     def has_permission(self, request, view):
-        if not request.user.is_authenticated:
+        auth = bool(request.user and request.user.is_authenticated)
+        if not auth:
             return False
-        staff = request.user.is_staff or request.user.role == 'admin'
-        return bool(request.user and staff)
+        is_staff = request.user.is_staff or request.user.role in [
+            'admin']
+        return bool(request.user and is_staff)
+
+
+class IsAdminUserOrOwner(IsAdminUser):
+    def has_permission(self, request, view):
+        auth = bool(request.user and request.user.is_authenticated)
+        if not auth:
+            return False
+        action, user = view.action, request.user
+        if action in ['retrieve', 'partial_update', 'destroy'] and user.role in [
+                'user', 'moderator']:
+            return True
+        is_staff = user.is_staff or user.role in [
+            'admin']
+        return bool(request.user and is_staff)
+
+    def has_object_permission(self, request, view, obj):
+        action, user = view.action, request.user
+        is_staff = user.is_staff or user.role in [
+            'admin']
+        is_owner = obj == user
+        return is_staff or is_owner
