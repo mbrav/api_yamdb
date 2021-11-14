@@ -78,6 +78,41 @@ def createTitles(csv_object):
         line_count += 1
 
 
+def createGenre(csv_object):
+    line_count = 0
+    for row in csv_object:
+        if line_count > 0:
+            new_genre = Genres(
+                id=row[0],
+                name=row[1],
+                slug=row[2],
+            )
+            print(f'Создаём Genres {new_genre}')
+            new_genre.save()
+        line_count += 1
+
+
+def createGenreTitles(csv_object):
+    line_count = 0
+    for row in csv_object:
+        if line_count > 0:
+            new_genre_title = Genres(
+                id=row[0],
+                name=row[1],
+                slug=row[2],
+            )
+            print(f'Создаём GenreTitle {new_genre_title}')
+            new_genre_title.save()
+        line_count += 1
+
+
+def createComments(csv_object):
+    line_count = 0
+    for row in csv_object:
+        if line_count > 0:
+            pass
+
+
 def createReview(csv_object):
     line_count = 0
     for row in csv_object:
@@ -97,35 +132,14 @@ def createReview(csv_object):
         line_count += 1
 
 
-def createGenreTitle(csv_object):
-    line_count = 0
-    for row in csv_object:
-        if line_count > 0:
-            new_genre = Genres(
-                id=row[0],
-                name=row[1],
-                slug=row[2],
-            )
-            print(f'Создаём Genres {new_genre}')
-            new_genre.save()
-        line_count += 1
-
-
-def createComments(csv_object):
-    line_count = 0
-    for row in csv_object:
-        if line_count > 0:
-            pass
-
-
 files = {
     'users': f'{BASE_DIR}/static/data/users.csv',
     'category': f'{BASE_DIR}/static/data/category.csv',
     'titles': f'{BASE_DIR}/static/data/titles.csv',
-    'review': f'{BASE_DIR}/static/data/review.csv',
     'genre': f'{BASE_DIR}/static/data/genre.csv',
     'genre_title': f'{BASE_DIR}/static/data/genre_title.csv',
     'comments': f'{BASE_DIR}/static/data/comments.csv',
+    'review': f'{BASE_DIR}/static/data/review.csv',
 }
 
 
@@ -178,11 +192,13 @@ class Command(BaseCommand):
             category_csv = self.import_from_csv(
                 files['category'], output=run_only)
             titles_csv = self.import_from_csv(files['titles'], output=run_only)
-            review_csv = self.import_from_csv(files['review'], output=run_only)
+            genre_csv = self.import_from_csv(
+                files['genre'], output=run_only)
             genre_title_csv = self.import_from_csv(
                 files['genre_title'], output=run_only)
             comments_csv = self.import_from_csv(
                 files['comments'], output=run_only)
+            review_csv = self.import_from_csv(files['review'], output=run_only)
 
             if not run_only:
                 self.stdout.write(self.style.WARNING('createUsers'))
@@ -191,11 +207,13 @@ class Command(BaseCommand):
                 createCategory(csv_object=category_csv)
                 self.stdout.write(self.style.WARNING('createTitles'))
                 createTitles(csv_object=titles_csv)
-                # self.stdout.write(self.style.WARNING('createReview'))
-                # createReview(csv_object=review_csv)
+                self.stdout.write(self.style.WARNING('createGenre'))
+                createGenre(csv_object=genre_csv)
                 # self.stdout.write(self.style.WARNING('createGenreTitle'))
                 # createGenreTitle(csv_object=genre_title_csv)
                 # self.stdout.write(self.style.WARNING('createComments'))
                 # createComments(csv_object=comments_csv)
+                # self.stdout.write(self.style.WARNING('createReview'))
+                # createReview(csv_object=review_csv)
 
         self.stdout.write(self.style.SUCCESS('Иморт Завершён!'))
