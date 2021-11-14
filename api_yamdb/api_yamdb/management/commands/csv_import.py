@@ -92,18 +92,24 @@ def createGenre(csv_object):
         line_count += 1
 
 
-def createGenreTitles(csv_object):
+def createGenreTitle(csv_object):
     line_count = 0
+    genres = {}
     for row in csv_object:
         if line_count > 0:
-            new_genre_title = Genres(
-                id=row[0],
-                name=row[1],
-                slug=row[2],
-            )
-            print(f'Создаём GenreTitle {new_genre_title}')
-            new_genre_title.save()
+            if row[2] in genres.keys():
+                genres[row[2]].append(row[1])
+            else:
+                genres[row[2]] = [row[1]]
         line_count += 1
+
+    for genre, titles in genres.items():
+        g = Genres.objects.get(id=genre)
+        for title in titles:
+            t = Title.objects.get(id=title)
+            g.titles.add(t)
+            g.save()
+            print(f'Создаём связь между Title:{t} и Genre:{g}')
 
 
 def createComments(csv_object):
@@ -209,8 +215,8 @@ class Command(BaseCommand):
                 createTitles(csv_object=titles_csv)
                 self.stdout.write(self.style.WARNING('createGenre'))
                 createGenre(csv_object=genre_csv)
-                # self.stdout.write(self.style.WARNING('createGenreTitle'))
-                # createGenreTitle(csv_object=genre_title_csv)
+                self.stdout.write(self.style.WARNING('createGenreTitle'))
+                createGenreTitle(csv_object=genre_title_csv)
                 # self.stdout.write(self.style.WARNING('createComments'))
                 # createComments(csv_object=comments_csv)
                 # self.stdout.write(self.style.WARNING('createReview'))
