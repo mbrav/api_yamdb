@@ -1,4 +1,6 @@
+from django.db.models.query import QuerySet
 from rest_framework import serializers
+from rest_framework.fields import ReadOnlyField
 from rest_framework.relations import SlugRelatedField
 
 from reviews.models import Comment
@@ -15,30 +17,31 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
 
 
-class TitleSerializer(serializers.ModelSerializer):
-    category = SlugRelatedField(
-        read_only=True, slug_field='category'
-    )
-    genres = SlugRelatedField(
-        read_only=True, slug_field='genre'
-    )
-
-    class Meta:
-        model = Title
-        fields = ('id', 'name', 'year', 'rating')
-
-
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = '__all__'
+        fields = ('name', 'slug')
 
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genres
-        fields = '__all__'
+        fields = ('name', 'slug')
 
+class TitleSerializer(serializers.ModelSerializer):
+    category = CategorySerializer(read_only=True, many=False)
+    genre = GenreSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Title
+        fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category')
+        
+class TitlepostSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(queryset=Category.objects.all(), slug_field='slug')
+    genre = serializers.SlugRelatedField(queryset=Genres.objects.all(), slug_field='slug', many=True)
+    class Meta:
+        model = Title
+        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(

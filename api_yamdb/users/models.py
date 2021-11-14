@@ -23,3 +23,15 @@ class User(AbstractUser):
         choices=USER_ROLE_CHOICES,
         default=USER,
     )
+
+    def get_full_name(self):
+        """
+        Этот метод требуется Django для таких вещей, как обработка электронной
+        почты. Обычно это имя фамилия пользователя, но поскольку мы не
+        используем их, будем возвращать username.
+        """
+        return self.username
+
+    def get_short_name(self):
+        """ Аналогично методу get_full_name(). """
+        return self.username
