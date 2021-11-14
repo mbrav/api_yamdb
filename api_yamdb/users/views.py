@@ -13,6 +13,13 @@ User = get_user_model()
 
 
 class YamDBTokenRefreshView(generics.RetrieveAPIView):
+    """
+    Вюшка для получения confirmation_code.
+
+    Токен проходит в Терминал через
+    django.core.mail.backends.console.EmailBackend
+    """
+
     permission_classes = (AllowAny,)
     serializer_class = UserLoginSerializer
 
@@ -42,6 +49,11 @@ class YamDBTokenRefreshView(generics.RetrieveAPIView):
 
 
 class YamDBRegisterView(generics.CreateAPIView):
+    """
+    Вюшка для подтверждения confirmation_code
+    и выдачи токена.
+    """
+
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = (AllowAny,)
@@ -71,6 +83,10 @@ class YamDBRegisterView(generics.CreateAPIView):
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    """
+    Вюшка для Users.
+    """
+
     permission_classes = (IsAdminUserOrOwner,)
     filter_backends = (filters.SearchFilter,)
     lookup_field = 'username'
@@ -102,6 +118,16 @@ class UserViewSet(viewsets.ModelViewSet):
         user = request.user
         serializer.is_valid(raise_exception=True)
 
+        # Пользователь с ролью 'user' может изменять свою
+        # информацию только через слаг 'me' а не через слаг
+        # своего юзернейма
+        username = self.kwargs.get(self.lookup_field)
+        if user.role == 'user' and username == user.username:
+            return Response(serializer.data, status=status.HTTP_403_FORBIDDEN)
+
+        # Проверка на попытку пользователь с ролью 'user'
+        # на эскалацию своего статуса через изменение поля 'role'
+        # на что-тo кроме значения 'user'
         if user.role == 'user' and serializer.validated_data.pop('role', 'user') != 'user':
             return Response(serializer.data, status=status.HTTP_403_FORBIDDEN)
 
@@ -111,10 +137,13 @@ class UserViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
 
+        # Все пользователи не имеют право совершать суицид
+        # от своего имени, не зависимо от статуса
         username = self.kwargs.get(self.lookup_field)
         if username == 'me':
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
+        # Только админы имеют право убивать
         is_staff = request.user.is_staff or request.user.role in [
             'admin']
         if not is_staff:
@@ -124,6 +153,7 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_serializer_class(self):
+        # Кастомные сериалайзеры для POST и PATCH
         request_action = self.get_serializer_context()[
             'request']._request.method
         if request_action != "POST":

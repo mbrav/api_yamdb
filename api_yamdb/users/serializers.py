@@ -50,6 +50,11 @@ class UserLoginSerializer(serializers.Serializer):
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
+    """
+    User сериализатор для POST запросов с включенной
+    проверкой на username и email.
+    """
+
     username = serializers.CharField(
         required=True,
     )
@@ -80,6 +85,11 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
 
 class UserUpdateSerializer(UserCreateSerializer):
+    """
+    User сериализатор для PATCH запросов с отключенной
+    проверкой на username и email.
+    """
+
     username = serializers.CharField(
         required=False,
     )
