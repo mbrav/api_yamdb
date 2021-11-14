@@ -94,22 +94,14 @@ def createGenre(csv_object):
 
 def createGenreTitle(csv_object):
     line_count = 0
-    genres = {}
     for row in csv_object:
         if line_count > 0:
-            if row[2] in genres.keys():
-                genres[row[2]].append(row[1])
-            else:
-                genres[row[2]] = [row[1]]
+            genre = Genres.objects.get(id=row[2])
+            title = Title.objects.get(id=row[1])
+            genre.titles.add(title)
+            genre.save()
+            print(f'Создаём связь между Title {title} и Genre {genre}')
         line_count += 1
-
-    for genre, titles in genres.items():
-        g = Genres.objects.get(id=genre)
-        for title in titles:
-            t = Title.objects.get(id=title)
-            g.titles.add(t)
-            g.save()
-            print(f'Создаём связь между Title:{t} и Genre:{g}')
 
 
 def createComments(csv_object):
