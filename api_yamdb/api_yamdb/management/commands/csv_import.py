@@ -11,11 +11,21 @@
 # Помощь
 # ./manage.py csv_import --help
 
+from pathlib import Path
+import os
 import csv
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from reviews.models import Category, Comment, Genres, Rating, Review, Title
+
+# Find the project base directory
+# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+FILE_PATH = os.path.abspath(__file__)
+# Specify number of directories to go up from current file
+PATH_UP = 3
+BASE_DIR = str(Path(FILE_PATH).parents[PATH_UP])
+
 
 User = get_user_model()
 
@@ -109,13 +119,13 @@ def createComments(csv_object):
 
 
 files = {
-    'users': 'static/data/users.csv',
-    'category': 'static/data/category.csv',
-    'titles': 'static/data/titles.csv',
-    'review': 'static/data/review.csv',
-    'genre': 'static/data/genre.csv',
-    'genre_title': 'static/data/genre_title.csv',
-    'comments': 'static/data/comments.csv',
+    'users': f'{BASE_DIR}/static/data/users.csv',
+    'category': f'{BASE_DIR}/static/data/category.csv',
+    'titles': f'{BASE_DIR}/static/data/titles.csv',
+    'review': f'{BASE_DIR}/static/data/review.csv',
+    'genre': f'{BASE_DIR}/static/data/genre.csv',
+    'genre_title': f'{BASE_DIR}/static/data/genre_title.csv',
+    'comments': f'{BASE_DIR}/static/data/comments.csv',
 }
 
 
