@@ -1,17 +1,20 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
+from django_filters.filters import NumberFilter
 from rest_framework import viewsets, filters, status
 
 from rest_framework import permissions
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
+from django_filters import FilterSet, CharFilter, NumberFilter
 
 from .serializers import (
     CommentSerializer, TitleSerializer,
-    GenreSerializer, CategorySerializer
+    GenreSerializer, CategorySerializer, TitlepostSerializer
 )
 from .permissions import (
-    IsAuthorOrReadOnlyPermission, ReadOnly, IsAdminOrReadOnly)
+    IsAuthorOrReadOnlyPermission, ReadOnly, IsAdminOrReadOnly, IsAdminUser)
 from reviews.models import Category, Title, Genres
 
 User = get_user_model()
@@ -32,11 +35,27 @@ class CommentViewSet(viewsets.ModelViewSet):
         return self.review.comments.all()
 
 
+class TitleFilterBackend(FilterSet):
+    genre = CharFilter(field_name='genre__slug')
+    category = CharFilter(field_name='category__slug')
+    year = NumberFilter(field_name='year')
+    name = CharFilter(field_name='name', lookup_expr='icontains')
+
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     permission_classes = (IsAdminOrReadOnly,)
-    serializer_class = TitleSerializer
+    #serializer_class = TitleSerializer
     pagination_class = LimitOffsetPagination
+    filter_backends = (DjangoFilterBackend,)
+    filter_class = TitleFilterBackend
+    filterset_fields = ('genre', 'category', 'year', 'name',)
+    
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return TitleSerializer 
+
+        return TitlepostSerializer
 
     def perform_create(self, serializer):
         print(serializer)
@@ -46,7 +65,8 @@ class TitleViewSet(viewsets.ModelViewSet):
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genres.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminOrReadOnly,)
+    #permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAdminUser,)
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -85,9 +105,9 @@ class CategoryViewSet(viewsets.ModelViewSet):
         instance = get_object_or_404(Category, slug=slug)
         serializer = CategorySerializer(instance)
         return Response(serializer.data) """
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return Response(status=status.HTTP_404_NOT_FOUND)
     def partial_update(self, request, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return Response(status=status.HTTP_404_NOT_FOUND)
             
     def destroy(self, request, **kwargs):
         slug = self.kwargs.get('pk')
