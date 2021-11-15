@@ -1,57 +1,23 @@
+from api.permissions import AllowAny, IsAdminUser, IsAdminUserOrOwner
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, status, viewsets, filters
+from rest_framework import filters, generics, status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 
-from api.permissions import AllowAny, IsAdminUser, IsAdminUserOrOwner
-from .serializers import (RegisterSerializer, UserLoginSerializer,
-                          UserCreateSerializer, UserUpdateSerializer)
+from .serializers import (RegisterSerializer, UserCreateSerializer,
+                          UserLoginSerializer, UserUpdateSerializer)
 from .utils import Util
 
 User = get_user_model()
 
 
-class YamDBTokenRefreshView(generics.RetrieveAPIView):
+class YamDBRegisterView(generics.CreateAPIView):
     """
     Вюшка для получения confirmation_code.
 
     Токен проходит в Терминал через
     django.core.mail.backends.console.EmailBackend
-    """
-
-    permission_classes = (AllowAny,)
-    serializer_class = UserLoginSerializer
-
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        username = serializer.data['username']
-        conf_code = serializer.data['confirmation_code']
-        user = get_object_or_404(User, username=username)
-
-        if user is not None and Util.token_generator.check_token(user, conf_code):
-            # Делаем юзера активным
-            user.is_active = True
-            user.save()
-        else:
-            response = {
-                'confirmation_code': 'Токен не валидный'
-            }
-            return Response(response, status=status.HTTP_400_BAD_REQUEST)
-
-        token = Token.objects.get_or_create(user=user)
-        response = {
-            'token': token[0].key,
-        }
-        return Response(response, status=status.HTTP_200_OK)
-
-
-class YamDBRegisterView(generics.CreateAPIView):
-    """
-    Вюшка для подтверждения confirmation_code
-    и выдачи токена.
     """
 
     queryset = User.objects.all()
@@ -80,6 +46,40 @@ class YamDBRegisterView(generics.CreateAPIView):
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_200_OK, headers=headers)
+
+
+class YamDBTokenRefreshView(generics.RetrieveAPIView):
+    """
+    Вюшка для подтверждения confirmation_code
+    и выдачи токена.
+    """
+
+    permission_classes = (AllowAny,)
+    serializer_class = UserLoginSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        username = serializer.data['username']
+        conf_code = serializer.data['confirmation_code']
+        user = get_object_or_404(User, username=username)
+
+        if user is not None and Util.token_generator.check_token(user, conf_code):
+            # Делаем юзера активным
+            user.is_active = True
+            user.save()
+        else:
+            response = {
+                'confirmation_code': 'Токен не валидный'
+            }
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+        token = Token.objects.get_or_create(user=user)
+        response = {
+            'token': token[0].key,
+        }
+        return Response(response, status=status.HTTP_200_OK)
 
 
 class UserViewSet(viewsets.ModelViewSet):

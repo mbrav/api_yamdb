@@ -28,6 +28,16 @@ class Util:
 
     @staticmethod
     def send_email(data):
+        """Отправка почты без threading"""
+
+        email = EmailMessage(
+            subject=data['email_subject'], body=data['email_body'], to=[data['to_email']])
+        email.send()
+
+    @staticmethod
+    def send_email_thread(data):
+        """Отправка почты с threading"""
+
         email = EmailMessage(
             subject=data['email_subject'], body=data['email_body'], to=[data['to_email']])
         EmailThread(email).start()
