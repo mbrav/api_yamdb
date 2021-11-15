@@ -59,7 +59,7 @@ class Title(models.Model):
 
 
 class Review(models.Model):
-    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+    title = models.ForeignKey(Title, on_delete=models.CASCADE, related_name='reviews')
     text = models.TextField(
         verbose_name='review text',
     )
@@ -81,6 +81,7 @@ class Review(models.Model):
     class Meta:
         verbose_name = 'Review'
         verbose_name_plural = 'Reviews'
+        unique_together = ('title', 'author')
 
     def __str__(self):
         return self.text
@@ -110,6 +111,3 @@ class Comment(models.Model):
         verbose_name = 'Comment'
         verbose_name_plural = 'Comments'
 
-
-class Rating(models.Model):
-    text = models.TextField()
