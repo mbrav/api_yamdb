@@ -1,5 +1,8 @@
 from django.db import models
 from datetime import date
+from django.core.validators import MaxValueValidator, MinValueValidator
+
+from django.db.models.aggregates import Min
 from users.models import User
 
 
@@ -56,6 +59,7 @@ class Title(models.Model):
 
 
 class Review(models.Model):
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
     text = models.TextField(
         verbose_name='review text',
     )
@@ -68,6 +72,11 @@ class Review(models.Model):
     pub_date = models.DateTimeField(
         verbose_name='date of publication',
         auto_now_add=True)
+    
+    score = models.IntegerField(
+        default=5,
+        validators=[MinValueValidator(1), MaxValueValidator(10)]
+    )
 
     class Meta:
         verbose_name = 'Review'

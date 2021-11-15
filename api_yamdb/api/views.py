@@ -11,11 +11,11 @@ from django_filters import FilterSet, CharFilter, NumberFilter
 
 from .serializers import (
     CommentSerializer, TitleSerializer,
-    GenreSerializer, CategorySerializer, TitlepostSerializer
+    GenreSerializer, CategorySerializer, TitlepostSerializer, ReviewSerializer
 )
 from .permissions import (
     IsAuthorOrReadOnlyPermission, ReadOnly, IsAdminOrReadOnly, IsAdminUser)
-from reviews.models import Category, Title, Genres
+from reviews.models import Category, Review, Title, Genres
 
 User = get_user_model()
 
@@ -58,7 +58,6 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitlepostSerializer
 
     def perform_create(self, serializer):
-        print(serializer)
         serializer.save()
 
 
@@ -119,3 +118,22 @@ class CategoryViewSet(viewsets.ModelViewSet):
         if self.action in ['list', 'retrieve']:
             return (ReadOnly(),)
         return super().get_permissions() """
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    serializer_class = ReviewSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+    def get_queryset(self):
+        title_id = self.kwargs.get('title_id')
+        title = get_object_or_404(Title, id=title_id)
+        new_queryset = Review.objects.filter(title=title)
+        return new_queryset
+
+    """ def perform_create(self, serializer):
+        print('1')
+        title_id = self.kwargs.get('title_id')
+        title = get_object_or_404(Title, id=title_id)
+        print('1')
+        serializer.save(author=self.request.user, title=title) """
+
