@@ -11,13 +11,13 @@
 # Помощь
 # ./manage.py csv_import --help
 
-from pathlib import Path
-import os
 import csv
+import os
+from pathlib import Path
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
-from reviews.models import Category, Comment, Genres, Rating, Review, Title
+from reviews.models import Category, Comment, Genre, Review, Title
 
 # Find the project base directory
 # BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -96,19 +96,12 @@ def createGenreTitle(csv_object):
     line_count = 0
     for row in csv_object:
         if line_count > 0:
-            genre = Genres.objects.get(id=row[2])
+            genre = Genre.objects.get(id=row[2])
             title = Title.objects.get(id=row[1])
             genre.titles.add(title)
             genre.save()
             print(f'Создаём связь между Title {title} и Genre {genre}')
         line_count += 1
-
-
-def createComments(csv_object):
-    line_count = 0
-    for row in csv_object:
-        if line_count > 0:
-            pass
 
 
 def createReview(csv_object):
@@ -127,6 +120,25 @@ def createReview(csv_object):
             )
             print(f'Создаём Review {new_review}')
             new_review.save()
+        line_count += 1
+
+
+def createComments(csv_object):
+    line_count = 0
+    # id,review_id,text,author,pub_date
+    for row in csv_object:
+        if line_count > 0:
+            review = Review.objects.get(id=row[1])
+            author = User.objects.get(id=row[3])
+            new_comment = Comment(
+                id=row[0],
+                review=review,
+                text=row[2],
+                author=author,
+                pub_date=row[4],
+            )
+            print(f'Создаём Comment {new_comment}')
+            new_comment.save()
         line_count += 1
 
 
@@ -209,9 +221,9 @@ class Command(BaseCommand):
                 createGenre(csv_object=genre_csv)
                 self.stdout.write(self.style.WARNING('createGenreTitle'))
                 createGenreTitle(csv_object=genre_title_csv)
-                # self.stdout.write(self.style.WARNING('createComments'))
-                # createComments(csv_object=comments_csv)
-                # self.stdout.write(self.style.WARNING('createReview'))
-                # createReview(csv_object=review_csv)
+                self.stdout.write(self.style.WARNING('createReview'))
+                createReview(csv_object=review_csv)
+                self.stdout.write(self.style.WARNING('createComments'))
+                createComments(csv_object=comments_csv)
 
         self.stdout.write(self.style.SUCCESS('Иморт Завершён!'))

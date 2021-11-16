@@ -1,4 +1,4 @@
-from api.permissions import AllowAny, IsAdminUser, IsAdminUserOrOwner
+from api.permissions import AllowAny, IsAdminUserOrOwner
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, generics, status, viewsets

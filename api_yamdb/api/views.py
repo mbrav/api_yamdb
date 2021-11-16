@@ -1,22 +1,19 @@
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
-from django_filters.filters import NumberFilter
-from rest_framework import viewsets, filters, status
 from django.db.models import Avg
-
-from rest_framework import permissions
+from django.shortcuts import get_object_or_404
+from django_filters import CharFilter, FilterSet, NumberFilter
+from django_filters.filters import NumberFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, permissions, status, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
-from django_filters.rest_framework import DjangoFilterBackend
-from django_filters import FilterSet, CharFilter, NumberFilter
+from reviews.models import Category, Genre, Review, Title
 
-from .serializers import (
-    CommentSerializer, TitleSerializer,
-    GenreSerializer, CategorySerializer, TitlepostSerializer, ReviewSerializer
-)
-from .permissions import (
-    IsAuthorOrReadOnlyPermission, ReadOnly, IsAdminOrReadOnly, IsAdminUser)
-from reviews.models import Category, Review, Title, Genres
+from .permissions import (IsAdminOrReadOnly, IsAdminUser,
+                          IsAuthorOrReadOnlyPermission, ReadOnly)
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, ReviewSerializer,
+                          TitlepostSerializer, TitleSerializer)
 
 User = get_user_model()
 
@@ -42,19 +39,18 @@ class TitleFilterBackend(FilterSet):
     year = NumberFilter(field_name='year')
     name = CharFilter(field_name='name', lookup_expr='icontains')
 
+
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all().annotate(Avg('reviews__score'))
     permission_classes = (IsAdminOrReadOnly,)
-    #serializer_class = TitleSerializer
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
     filter_class = TitleFilterBackend
     filterset_fields = ('genre', 'category', 'year', 'name',)
-    
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
-            return TitleSerializer 
+            return TitleSerializer
 
         return TitlepostSerializer
 
@@ -63,26 +59,22 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class GenreViewSet(viewsets.ModelViewSet):
-    queryset = Genres.objects.all()
+    queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    #permission_classes = (IsAdminOrReadOnly,)
     permission_classes = (IsAdminUser,)
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
     def retrieve(self, request, **kwargs):
-        """ slug = self.kwargs.get('pk')
-        instance = get_object_or_404(Category, slug=slug)
-        serializer = CategorySerializer(instance)
-        return Response(serializer.data) """
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
     def partial_update(self, request, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-    
+
     def destroy(self, request, **kwargs):
         slug = self.kwargs.get('pk')
-        instance = get_object_or_404(Genres, slug=slug)
+        instance = get_object_or_404(Genre, slug=slug)
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -99,26 +91,18 @@ class CategoryViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-    
+
     def retrieve(self, request, **kwargs):
-        """ slug = self.kwargs.get('pk')
-        instance = get_object_or_404(Category, slug=slug)
-        serializer = CategorySerializer(instance)
-        return Response(serializer.data) """
         return Response(status=status.HTTP_404_NOT_FOUND)
+
     def partial_update(self, request, **kwargs):
         return Response(status=status.HTTP_404_NOT_FOUND)
-            
+
     def destroy(self, request, **kwargs):
         slug = self.kwargs.get('pk')
         instance = get_object_or_404(Category, slug=slug)
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
-    """ def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
-            return (ReadOnly(),)
-        return super().get_permissions() """
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -136,3 +120,26 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title = get_object_or_404(Title, id=title_id)
         serializer.save(author=self.request.user, title=title)
 
+    def partial_update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+
+        # Проверяем юзера и автора ревью
+        # Если у юзера роль 'user' и автор ревью не он
+        # Даем ему 403
+        instance = self.get_object()
+        user = request.user
+        review_user = instance.author
+        if user.role == 'user' and review_user != user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        return self.update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        # Если у юзера роль 'user' и он хочет удалить ревью
+        # Даем ему 403
+        instance = self.get_object()
+        user = request.user
+        if user.role == 'user':
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)

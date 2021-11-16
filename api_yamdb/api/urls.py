@@ -1,9 +1,9 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-
 from users.views import UserViewSet, YamDBRegisterView, YamDBTokenRefreshView
-from .views import TitleViewSet, CategoryViewSet, GenreViewSet, CommentViewSet, ReviewViewSet
 
+from .views import (CategoryViewSet, CommentViewSet, GenreViewSet,
+                    ReviewViewSet, TitleViewSet)
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='users')
