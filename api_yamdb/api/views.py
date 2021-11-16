@@ -78,10 +78,10 @@ class CategoryViewSet(viewsets.ModelViewSet):
     search_fields = ('name',)
 
     def retrieve(self, request, **kwargs):
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def partial_update(self, request, **kwargs):
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def destroy(self, request, **kwargs):
         slug = self.kwargs.get('pk')
