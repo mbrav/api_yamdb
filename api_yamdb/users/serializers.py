@@ -65,7 +65,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
     def validate_username(self, username):
         if User.objects.filter(username=username).exists():
             raise serializers.ValidationError(
-                {'username': 'Пользователь с данным юзернеймом уже существует'})
+                {'username': 'Такой юзернеймом уже существует'})
         return username
 
     def validate_email(self, email):

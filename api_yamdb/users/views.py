@@ -45,7 +45,10 @@ class YamDBRegisterView(generics.CreateAPIView):
         Util.send_email(data)
 
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_200_OK, headers=headers)
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK,
+            headers=headers)
 
 
 class YamDBTokenRefreshView(generics.RetrieveAPIView):
@@ -65,7 +68,8 @@ class YamDBTokenRefreshView(generics.RetrieveAPIView):
         conf_code = serializer.data['confirmation_code']
         user = get_object_or_404(User, username=username)
 
-        if user is not None and Util.token_generator.check_token(user, conf_code):
+        if (user is not None
+                and Util.token_generator.check_token(user, conf_code)):
             # Делаем юзера активным
             user.is_active = True
             user.save()
@@ -101,7 +105,6 @@ class UserViewSet(viewsets.ModelViewSet):
             return User.objects.filter(username=self.request.user.username)
 
     def get_object(self):
-        queryset = self.get_queryset()
         username = self.kwargs.get(self.lookup_field)
         if username == 'me':
             username = self.request.user.username
@@ -128,7 +131,8 @@ class UserViewSet(viewsets.ModelViewSet):
         # Проверка на попытку пользователь с ролью 'user'
         # на эскалацию своего статуса через изменение поля 'role'
         # на что-тo кроме значения 'user'
-        if user.role == 'user' and serializer.validated_data.pop('role', 'user') != 'user':
+        if (user.role == 'user'
+                and serializer.validated_data.pop('role', 'user') != 'user'):
             return Response(serializer.data, status=status.HTTP_403_FORBIDDEN)
 
         self.perform_update(serializer)
