@@ -33,5 +33,5 @@ class User(AbstractUser):
         return self.username
 
     def get_short_name(self):
-        """ Аналогично методу get_full_name(). """
+        """ Аналогично с методом get_full_name(). """
         return self.username
