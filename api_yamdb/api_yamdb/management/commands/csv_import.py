@@ -82,12 +82,12 @@ def createGenre(csv_object):
     line_count = 0
     for row in csv_object:
         if line_count > 0:
-            new_genre = Genres(
+            new_genre = Genre(
                 id=row[0],
                 name=row[1],
                 slug=row[2],
             )
-            print(f'Создаём Genres {new_genre}')
+            print(f'Создаём Genre {new_genre}')
             new_genre.save()
         line_count += 1
 

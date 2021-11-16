@@ -20,8 +20,14 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    category = CategorySerializer(read_only=True, many=False)
-    genre = GenreSerializer(read_only=True, many=True)
+    category = CategorySerializer(
+        read_only=True,
+        many=False
+    )
+    genre = GenreSerializer(
+        read_only=True,
+        many=True
+    )
 
     class Meta:
         model = Title
@@ -29,11 +35,17 @@ class TitleSerializer(serializers.ModelSerializer):
                   'description', 'genre', 'category')
 
 
-class TitlepostSerializer(serializers.ModelSerializer):
+class TitlePostSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
-        queryset=Category.objects.all(), slug_field='slug')
+        queryset=Category.objects.all(),
+        slug_field='slug'
+    )
+
     genre = serializers.SlugRelatedField(
-        queryset=Genre.objects.all(), slug_field='slug', many=True)
+        queryset=Genre.objects.all(),
+        slug_field='slug',
+        many=True
+    )
 
     class Meta:
         model = Title
@@ -66,6 +78,17 @@ class ReviewSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(response)
         return score
 
+    # def validate_title(self, title):
+    #     user = self.context['request'].user
+    #     title_obj = get_object_or_404(Title, slug=title)
+    #     if self.context['request'].method == 'POST':
+    #         if Review.objects.filter(author=user, title=title_obj).exists():
+    #             response = {
+    #                 'review': 'Уже есть такой отзыв.'
+    #             }
+    #             raise serializers.ValidationError(response)
+    #     return title
+
     def validate(self, data):
         title_id = self.context['view'].kwargs.get('title_id')
         user = self.context['request'].user
@@ -76,7 +99,6 @@ class ReviewSerializer(serializers.ModelSerializer):
                     'review': 'Уже есть такой отзыв.'
                 }
                 raise serializers.ValidationError(response)
-            return data
         return data
 
 

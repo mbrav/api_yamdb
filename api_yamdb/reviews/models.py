@@ -116,7 +116,7 @@ class Review(models.Model):
         unique_together = ('title', 'author')
 
     def __str__(self):
-        return f'{self.title}, {self.pub_date:%d.%m.%Y-%H:%M}, 10/{self.score}'
+        return f'{self.title}, {self.pub_date}, {self.score}/10'
 
 
 class Comment(models.Model):
@@ -148,4 +148,4 @@ class Comment(models.Model):
         verbose_name_plural = 'Comments'
 
     def __str__(self):
-        return f'{self.author}, {self.pub_date:%d.%m.%Y-%H:%M}, "{self.text[:30]}"'
+        return f'{self.author}, {self.pub_date}, "{self.text[:30]}"'

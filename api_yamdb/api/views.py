@@ -13,7 +13,7 @@ from .permissions import (IsAdminOrReadOnly, IsAdminUser,
                           IsAuthorOrReadOnlyPermission, ReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer,
-                          TitlepostSerializer, TitleSerializer)
+                          TitlePostSerializer, TitleSerializer)
 
 User = get_user_model()
 
@@ -22,15 +22,18 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (IsAuthorOrReadOnlyPermission,)
 
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user, review=self.review)
-
     def review(self):
         review_id = self.kwargs.get('review_id')
         return get_object_or_404(Review, id=review_id)
 
+    def perform_create(self, serializer):
+        review = self.review()
+        serializer.save(author=self.request.user, review=review)
+
     def get_queryset(self):
-        return self.review.comments.all()
+        review = self.review()
+        commments = review.comments.all()
+        return commments
 
 
 class TitleFilterBackend(FilterSet):
@@ -52,7 +55,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.action in ('list', 'retrieve'):
             return TitleSerializer
 
-        return TitlepostSerializer
+        return TitlePostSerializer
 
     def perform_create(self, serializer):
         serializer.save()
