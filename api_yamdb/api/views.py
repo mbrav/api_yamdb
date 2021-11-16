@@ -18,24 +18,6 @@ from .serializers import (CategorySerializer, CommentSerializer,
 User = get_user_model()
 
 
-class CommentViewSet(viewsets.ModelViewSet):
-    serializer_class = CommentSerializer
-    permission_classes = (IsAuthorOrReadOnlyPermission,)
-
-    def review(self):
-        review_id = self.kwargs.get('review_id')
-        return get_object_or_404(Review, id=review_id)
-
-    def perform_create(self, serializer):
-        review = self.review()
-        serializer.save(author=self.request.user, review=review)
-
-    def get_queryset(self):
-        review = self.review()
-        commments = review.comments.all()
-        return commments
-
-
 class TitleFilterBackend(FilterSet):
     genre = CharFilter(field_name='genre__slug')
     category = CharFilter(field_name='category__slug')
@@ -143,6 +125,51 @@ class ReviewViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         user = request.user
         if user.role == 'user':
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+    def review(self):
+        review_id = self.kwargs.get('review_id')
+        return get_object_or_404(Review, id=review_id)
+
+    def req_user(self):
+        return self.request.user
+
+    def get_queryset(self):
+        review = self.review()
+        commments = review.comments.all()
+        return commments
+
+    def perform_create(self, serializer):
+        if self.req_user().is_authenticated is False:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        review = self.review()
+        serializer.save(author=self.request.user, review=review)
+
+    def perform_update(self, serializer):
+        user = self.req_user()
+        instance = self.get_object()
+        auth = user.is_authenticated
+        if not auth:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+        if user.role == 'user' and instance.author != user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        serializer.save()
+
+    def destroy(self, request, *args, **kwargs):
+        # Если у юзера роль 'user' и он хочет удалить коммент
+        # Даем ему 403
+        instance = self.get_object()
+        user = self.req_user()
+        auth = user.is_authenticated
+        if user.role == 'user' or not auth:
             return Response(status=status.HTTP_403_FORBIDDEN)
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
