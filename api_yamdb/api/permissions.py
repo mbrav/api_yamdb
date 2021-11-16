@@ -23,12 +23,13 @@ class ReadOnly(permissions.BasePermission):
 class IsAdminOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS or (
-                request.user.is_authenticated and request.user.role == 'admin'):
+                request.user.is_authenticated
+                and request.user.role == 'admin'):
             return True
 
 
 class IsAdminUser(permissions.IsAdminUser):
-    """"Старое Кастомное разрешиние для обьектов User."""
+    """"Старое Кастомное разрешение для объектов User."""
 
     def has_permission(self, request, view):
         auth = bool(request.user and request.user.is_authenticated)
@@ -40,7 +41,7 @@ class IsAdminUser(permissions.IsAdminUser):
 
 
 class IsAdminUserOrOwner(permissions.BasePermission):
-    """"Кастомное разрешиние для обьектов User"""
+    """"Кастомное разрешение для объектов User"""
 
     def has_permission(self, request, view):
         """"
@@ -52,8 +53,8 @@ class IsAdminUserOrOwner(permissions.BasePermission):
         if not auth:
             return False
         action, user = view.action, request.user
-        if action in ['retrieve', 'partial_update', 'destroy'] and user.role in [
-                'user', 'moderator']:
+        if (action in ['retrieve', 'partial_update', 'destroy']
+                and user.role in ['user', 'moderator']):
             return True
         is_staff = user.is_staff or user.role in [
             'admin']
@@ -66,7 +67,7 @@ class IsAdminUserOrOwner(permissions.BasePermission):
         кроме самого себя.
         """
 
-        action, user = view.action, request.user
+        user = request.user
         is_staff = user.is_staff or user.role in [
             'admin']
         is_owner = obj == user
