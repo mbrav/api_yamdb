@@ -13,7 +13,7 @@
 -   Клонировать репозиторий:
 
 ```
-git clone https://github.com/kudinov-prog/api_yamdb_kudinov.git
+git clone https://github.com/mbrav/api_yamdb.git
 ```
 
 -   Установить и активировать виртуальное окружение:
