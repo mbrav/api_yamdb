@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from reviews.models import Category, Genre, Review, Title
 
 from .permissions import (IsAdminOrReadOnly, IsAdminUser,
-                          IsAuthorOrReadOnlyPermission, ReadOnly)
+                          ReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer,
                           TitlePostSerializer, TitleSerializer)
@@ -143,8 +143,8 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         review = self.review()
-        commments = review.comments.all()
-        return commments
+        comments = review.comments.all()
+        return comments
 
     def perform_create(self, serializer):
         if self.req_user().is_authenticated is False:

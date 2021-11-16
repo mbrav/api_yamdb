@@ -180,18 +180,28 @@ class Command(BaseCommand):
         return csv_reader
 
     def add_arguments(self, parser):
-        parser.add_argument('-r', '--run_only', action='store_true',
-                            help='Ничего не делать с базой, только пробежка.', )
-        parser.add_argument('-t', '--table', type=str,
-                            help=f'Указать таблицу название таблицы. Доступны: {", ".join(files.keys())}.')
+        parser.add_argument(
+            '-r',
+            '--run_only',
+            action='store_true',
+            help='Ничего не делать с базой, только пробежка.',
+        )
+
+        parser.add_argument(
+            '-t',
+            '--table',
+            type=str,
+            help='Указать таблицу название таблицы.'
+            + f' Доступны: {", ".join(files.keys())}.'
+        )
 
     def handle(self, *args, **kwargs):
 
-        run_only = kwargs['run_only'] == True
+        run_only = kwargs['run_only'] is True
         table = kwargs['table']
 
         self.stdout.write(self.style.MIGRATE_HEADING(
-            'Имортируем данные заказчика'))
+            'Импортируем данные заказчика'))
 
         if table:
             specified_csv = self.import_from_csv(files[table], output=run_only)
@@ -226,4 +236,4 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING('createComments'))
                 createComments(csv_object=comments_csv)
 
-        self.stdout.write(self.style.SUCCESS('Иморт Завершён!'))
+        self.stdout.write(self.style.SUCCESS('Импорт Завершён!'))
