@@ -19,7 +19,7 @@ class IsAdminOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS or (
                 request.user.is_authenticated
-                and request.user.role == 'admin'):
+                and request.user.is_admin):
             return True
 
 
@@ -43,14 +43,14 @@ class IsAdminUserOrOwner(permissions.BasePermission):
         Без тщательной проверки, доступ к объектам закрыт.
         """
 
+        SAFE_ACTIONS = ('retrieve', 'partial_update', 'destroy')
+
         auth = bool(request.user and request.user.is_authenticated)
         if not auth:
             return False
-        action, user = view.action, request.user
-        if (action in ['retrieve', 'partial_update', 'destroy']
-                and user.role in ['user', 'moderator']):
+        if view.action in SAFE_ACTIONS:
             return True
-        return bool(request.user and user.is_admin)
+        return bool(request.user and request.user.is_admin)
 
     def has_object_permission(self, request, view, obj):
         """"
