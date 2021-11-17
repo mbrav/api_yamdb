@@ -21,13 +21,13 @@ class RegisterSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        user = User.objects.create(
+        user, created = User.objects.get_or_create(
             username=validated_data['username'],
             email=validated_data['email'],
+            defaults={'is_active': False},
         )
 
-        # Делаем юзера неактивным, пока он не подвердит свой токен
-        user.is_active = False
+        # Делаем юзера неактивным, пока он не подвертит свой токен
         user.save()
         return user
 

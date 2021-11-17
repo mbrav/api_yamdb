@@ -114,7 +114,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         user = request.user
         review_user = instance.author
-        if user.role == 'user' and review_user != user:
+        if user.is_usr and review_user != user:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         return self.update(request, *args, **kwargs)
@@ -124,7 +124,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         # Даем ему 403
         instance = self.get_object()
         user = request.user
-        if user.role == 'user':
+        if user.is_usr:
             return Response(status=status.HTTP_403_FORBIDDEN)
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -138,22 +138,19 @@ class CommentViewSet(viewsets.ModelViewSet):
         review_id = self.kwargs.get('review_id')
         return get_object_or_404(Review, id=review_id)
 
-    def req_user(self):
-        return self.request.user
-
     def get_queryset(self):
         review = self.review()
         comments = review.comments.all()
         return comments
 
     def perform_create(self, serializer):
-        if self.req_user().is_authenticated is False:
+        if self.request.user.is_authenticated is False:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         review = self.review()
         serializer.save(author=self.request.user, review=review)
 
     def update(self, request, *args, **kwargs):
-        user = self.req_user()
+        user = self.request.user
         auth = user.is_authenticated
         if not auth:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
@@ -164,7 +161,7 @@ class CommentViewSet(viewsets.ModelViewSet):
             instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
 
-        if user.role == 'user' and instance.author != user:
+        if user.is_usr and instance.author != user:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         self.perform_update(serializer)
@@ -180,9 +177,9 @@ class CommentViewSet(viewsets.ModelViewSet):
         # Если у юзера роль 'user' и он хочет удалить коммент
         # Даем ему 403
         instance = self.get_object()
-        user = self.req_user()
+        user = self.request.user
         auth = user.is_authenticated
-        if user.role == 'user' or not auth:
+        if user.is_usr or not auth:
             return Response(status=status.HTTP_403_FORBIDDEN)
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)

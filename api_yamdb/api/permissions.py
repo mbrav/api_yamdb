@@ -1,10 +1,6 @@
 from rest_framework import permissions
 
 
-class AllowAny(permissions.AllowAny):
-    pass
-
-
 class IsAuthorOrReadOnlyPermission(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         return (
@@ -34,9 +30,8 @@ class IsAdminUser(permissions.IsAdminUser):
         auth = bool(request.user and request.user.is_authenticated)
         if not auth:
             return False
-        is_staff = request.user.is_staff or request.user.role in [
-            'admin']
-        return bool(request.user and is_staff)
+
+        return bool(request.user and request.user.is_admin)
 
 
 class IsAdminUserOrOwner(permissions.BasePermission):
@@ -55,9 +50,7 @@ class IsAdminUserOrOwner(permissions.BasePermission):
         if (action in ['retrieve', 'partial_update', 'destroy']
                 and user.role in ['user', 'moderator']):
             return True
-        is_staff = user.is_staff or user.role in [
-            'admin']
-        return bool(request.user and is_staff)
+        return bool(request.user and user.is_admin)
 
     def has_object_permission(self, request, view, obj):
         """"
@@ -67,7 +60,5 @@ class IsAdminUserOrOwner(permissions.BasePermission):
         """
 
         user = request.user
-        is_staff = user.is_staff or user.role in [
-            'admin']
         is_owner = obj == user
-        return is_staff or is_owner
+        return user.is_admin or is_owner

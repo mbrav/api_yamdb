@@ -1,4 +1,5 @@
-from api.permissions import AllowAny, IsAdminUserOrOwner
+from api.permissions import IsAdminUserOrOwner
+from rest_framework import permissions
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, generics, status, viewsets
@@ -22,7 +23,7 @@ class YamDBRegisterView(generics.CreateAPIView):
 
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -57,7 +58,7 @@ class YamDBTokenRefreshView(generics.RetrieveAPIView):
     и выдачи токена.
     """
 
-    permission_classes = (AllowAny,)
+    permission_classes = (permissions.AllowAny,)
     serializer_class = UserLoginSerializer
 
     def post(self, request):
@@ -97,9 +98,7 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ('username',)
 
     def get_queryset(self):
-        is_staff = self.request.user.is_staff or self.request.user.role in [
-            'admin', 'moderator']
-        if is_staff:
+        if self.request.user.is_stf:
             return User.objects.all()
         else:
             return User.objects.filter(username=self.request.user.username)
@@ -125,14 +124,15 @@ class UserViewSet(viewsets.ModelViewSet):
         # информацию только через слаг 'me' а не через слаг
         # своего юзернейма
         username = self.kwargs.get(self.lookup_field)
-        if user.role == 'user' and username == user.username:
+        if user.is_usr and username == user.username:
             return Response(serializer.data, status=status.HTTP_403_FORBIDDEN)
 
         # Проверка на попытку пользователь с ролью 'user'
         # на эскалацию своего статуса через изменение поля 'role'
         # на что-тo кроме значения 'user'
-        if (user.role == 'user'
-                and serializer.validated_data.pop('role', 'user') != 'user'):
+        if (user.is_usr
+                and serializer.validated_data.pop('role', 'user')
+                != user.USER):
             return Response(serializer.data, status=status.HTTP_403_FORBIDDEN)
 
         self.perform_update(serializer)
@@ -148,9 +148,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
         # Только админы имеют право убивать
-        is_staff = request.user.is_staff or request.user.role in [
-            'admin']
-        if not is_staff:
+        if not request.user.is_admin:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         self.perform_destroy(instance)

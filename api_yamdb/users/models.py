@@ -24,12 +24,23 @@ class User(AbstractUser):
         default=USER,
     )
 
+    @property
     def is_admin(self):
         admin = self.is_staff or self.role == self.ADMIN
-        return self.role == admin
+        return admin
 
-    def is_moderator(self):
+    @property
+    def is_mod(self):
         return self.role == self.MOD
+
+    @property
+    def is_usr(self):
+        return self.role == self.USER
+
+    @property
+    def is_stf(self):
+        staff = self.is_staff or self.role in [self.ADMIN, self.MOD]
+        return staff
 
     def get_full_name(self):
         """
