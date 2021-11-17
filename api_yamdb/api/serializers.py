@@ -74,17 +74,6 @@ class ReviewSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(response)
         return score
 
-    # def validate_title(self, title):
-    #     user = self.context['request'].user
-    #     title_obj = get_object_or_404(Title, slug=title)
-    #     if self.context['request'].method == 'POST':
-    #         if Review.objects.filter(author=user, title=title_obj).exists():
-    #             response = {
-    #                 'review': 'Уже есть такой отзыв.'
-    #             }
-    #             raise serializers.ValidationError(response)
-    #     return title
-
     def validate(self, data):
         title_id = self.context['view'].kwargs.get('title_id')
         user = self.context['request'].user

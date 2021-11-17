@@ -24,6 +24,13 @@ class User(AbstractUser):
         default=USER,
     )
 
+    def is_admin(self):
+        admin = self.is_staff or self.role == self.ADMIN
+        return self.role == admin
+
+    def is_moderator(self):
+        return self.role == self.MOD
+
     def get_full_name(self):
         """
         Этот метод требуется Django для таких вещей, как обработка электронной

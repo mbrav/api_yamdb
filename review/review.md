@@ -1,0 +1,88 @@
+-   [ ] **permissions.py** - `class AllowAny(permissions.BasePermission): ` - _В drf уже есть AllowAny, можно не переписывать
+        https://www.django-rest-framework.org/api-guide/permissions/#allowany_
+-   [ ] **permissions.py**
+    -   `and request.user.role == 'admin'):`
+    -   _Сравнение со строкой может привести к ошибкам. Надо либо сравнивать с константой, либо с проперти модели, если добавите её_
+-   [ ] **permissions.py**
+    -   `'admin']`
+    -   _Аналогично про сравнение со срокой_
+-   [ ] **permissions.py**
+    -   `and user.role in ['user', 'moderator']):`
+    -   _Тут тоже сравнение со строками. Либо через and и проперти, либо создаём список с константами_
+-   [ ] **permissions.py**
+    -   `'admin']`
+    -   _То же самое_
+-   [ ] **permissions.py**
+    -   `'admin']`
+    -   _И тут_
+-   [ ] **serializers.py**
+    -   `# def validate_title(self, title):`
+    -   _Закомментированный код лучше не коммитить_
+-   [ ] **views.py**
+    -   `queryset = Title.objects.all().annotate(Avg('reviews__score')) `
+    -   _Аннотейт найс_
+-   [ ] **views.py**
+    -   `instance = get_object_or_404(Genre, slug=slug) `
+    -   _Тут можно сделать фильтр и на нём вызвать делет. Т.к. последний не свалится на пустом кверисете_
+-   [ ] **views.py**
+    -   `instance = get_object_or_404(Category, slug=slug) `
+    -   _Аналогично про делет на фильтре_
+-   [ ] **views.py**
+    -   `new_queryset = Review.objects.filter(title=title) `
+    -   _Произведения можно достать через related name_
+-   [ ] **views.py**
+    -   `if user.role == 'user' and review_user != user:`
+    -   _Аналогично про сравнение со строками. И у вас уже есть пермишен IsAuthorOrReadOnly - почему бы его тут не использовать. Тогда не придётся в методе ниже повторять эту логику_
+-   [ ] **views.py**
+    -   `return get_object_or_404(Review, id=review_id)`
+    -   _Необходимо проверять, что коммент на верный тайтл. Т.е. помимо id, надо проверять title id_
+-   [ ] **views.py**
+    -   `def req_user(self):`
+    -   _Нет особого смысла создавать метод, который отдаёт self.что-то-там. Можно вызывать это свойство напрямую_
+-   [ ] **views.py**
+    -   `if self.req_user().is_authenticated is False:`
+    -   _Для этого уже есть пермишен, можно не прописывать эту логику руками_
+-   [ ] **views.py**
+    -   `if not auth:`
+    -   _Аналогично про то, что пермишен это уже проверяет_
+-   [ ] **views.py**
+    -   `# If 'prefetch_related' has been applied to a queryset, we need to`
+    -   _Только тут нигде нет prefetch_related. Можно либо убрать этот кусок кода, либо добавить prefetch_
+-   [ ] **views.py**
+    -   `def destroy(self, request, *args, **kwargs):`
+    -   _Этот метод можно не переопределять, т.к. проверка на аутентификацию уже есть в пермишене. А всё остальное не отличается от родительского метода_
+-   [ ] **admin.py**
+    -   `# Register your models here. `
+    -   _Комментарии разработчиков джанги можно удалять_
+-   [ ] **models.py**
+    -   `year = models.IntegerField() `
+    -   _Можно добавить валидатор, что год не больше текущего_
+-   [ ] **models.py**
+    -   `def rating(self):`
+    -   _Это будет слишком накладно, если доставать список объектов. На каждый объект будет высчитываться это значение, поднимая кучу отзывов. Во вью у вас уже есть классное решение с аннотаций. Тут это можно удалить_
+-   [ ] **models.py**
+    -   `score = models.PositiveSmallIntegerField( `
+    -   _PositiveInteger с валидаторами круть_
+-   [ ] **admin.py**
+    -   `# Register your models here. `
+    -   _Аналогично про комментарии разработчиков джанги_
+-   [ ] **models.py** - ` ` - _Для удобства можно добавить проперти "это админ" и "это модератор". Чтобы каждый раз не сравнивать роль
+        https://stackoverflow.com/questions/17330160/how-does-the-property-decorator-work-in-python_
+-   [ ] **serializers.py**
+    -   `user.is_active = False `
+    -   _Это можно передать в строку выше, чтобы сразу создать юзера неактивным и не сохранять объект два раза_
+-   [ ] **utils.py**
+    -   `class EmailThread(threading.Thread): `
+    -   _Хорошо если разобрались как это работает)_
+-   [ ] **views.py** - `serializer.is_valid(raise_exception=True) ` - _Сериалайзер сейчас проверяет на уникальность полей. Но если пользователь захочет зайти с другого устройства, то код ему не отправится. Т.к. тут будет вылетать "такой пользователь уже существует". Надо исправить поведение сериалайзера и ниже использовать get or create чтобы либо достать существующего пользователя, либо создать нового
+        https://docs.djangoproject.com/en/3.1/ref/models/querysets/#get-or-create_
+-   [ ] **views.py** - `user = User.objects.get(email=user_data['email']) ` - _Лучше использовать get_object_or_404 чтобы ничего не свалилось
+        https://docs.djangoproject.com/en/3.1/topics/http/shortcuts/#get-object-or-404_
+-   [ ] **views.py**
+    -   `'admin', 'moderator']`
+    -   _Аналогично про сравнение строк_
+-   [ ] **views.py** - `if username == 'me':` - _Тут можно просто использовать декоратор action над методом и код в этой вьюхе заметно сократится. Ну и перепроверка пермишенов в методах не нужна, т.к. на это есть пермишены
+        https://www.django-rest-framework.org/api-guide/viewsets/#marking-extra-actions-for-routing_
+-   [ ] \***\*init**.py\*\*
+    -   `from rest_framework import permissions `
+    -   _Как вам ревью? Оцените его качество.Это поможет нам улучшить ваше обучение. _
