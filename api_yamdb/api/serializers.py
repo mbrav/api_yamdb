@@ -1,3 +1,4 @@
+import datetime as dt
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from reviews.models import Category, Comment, Genre, Review, Title
@@ -47,6 +48,12 @@ class TitlePostSerializer(serializers.ModelSerializer):
         model = Title
         fields = ('id', 'name', 'year', 'description',
                   'genre', 'category')
+
+    def validate_year(self, value):
+        year = dt.datetime.today().year
+        if value > year:
+            raise serializers.ValidationError('Не правильно указан год')
+        return value
 
 
 class ReviewSerializer(serializers.ModelSerializer):

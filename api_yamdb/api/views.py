@@ -59,8 +59,7 @@ class GenreViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, **kwargs):
         slug = self.kwargs.get('pk')
-        instance = get_object_or_404(Genre, slug=slug)
-        self.perform_destroy(instance)
+        Genre.objects.filter(slug=slug).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_permissions(self):
@@ -85,8 +84,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, **kwargs):
         slug = self.kwargs.get('pk')
-        instance = get_object_or_404(Category, slug=slug)
-        self.perform_destroy(instance)
+        Category.objects.filter(slug=slug).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -97,7 +95,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
         title = get_object_or_404(Title, id=title_id)
-        new_queryset = Review.objects.filter(title=title)
+        new_queryset = title.reviews.all()
         return new_queryset
 
     def perform_create(self, serializer):
