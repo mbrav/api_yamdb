@@ -3,13 +3,36 @@ from rest_framework import permissions
 
 class IsAuthorOrReadOnlyPermission(permissions.IsAuthenticatedOrReadOnly):
 
+    SAFE_METHODS = ('GET', 'HEAD', 'OPTIONS')
+
     def has_permission(self, request, view):
-        SAFE_METHODS = ('GET', 'HEAD', 'OPTIONS')
+
+        if request.method == 'DELETE':
+            return request.user and request.user.is_authenticated
 
         return bool(
-            request.method in SAFE_METHODS
+            request.method in self.SAFE_METHODS
             or request.user
             and request.user.is_authenticated
+        )
+
+    def has_object_permission(self, request, view, obj):
+        """"
+        Проверка разрешения на объект 
+        """
+
+        auth = bool(request.user and request.user.is_authenticated)
+        if not auth:
+            return request.method in self.SAFE_METHODS
+
+        is_owner = obj.author == request.user
+        if request.method == 'DELETE':
+            return is_owner or request.user.is_stf
+
+        return bool(
+            request.user.is_admin
+            or is_owner
+            and request.user
         )
 
 

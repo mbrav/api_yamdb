@@ -103,29 +103,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title = get_object_or_404(Title, id=title_id)
         serializer.save(author=self.request.user, title=title)
 
-    def partial_update(self, request, *args, **kwargs):
-        kwargs['partial'] = True
-
-        # Проверяем юзера и автора ревью
-        # Если у юзера роль 'user' и автор ревью не он
-        # Даем ему 403
-        instance = self.get_object()
-        user = request.user
-        review_user = instance.author
-        if user.is_usr and review_user != user:
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
-        return self.update(request, *args, **kwargs)
-
-    def destroy(self, request, *args, **kwargs):
-        # Если у юзера роль 'user' и он хочет удалить ревью
-        # Даем ему 403
-        instance = self.get_object()
-        user = request.user
-        if user.is_usr:
-            return Response(status=status.HTTP_403_FORBIDDEN)
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+# Неплохо сократили тут
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -146,30 +124,4 @@ class CommentViewSet(viewsets.ModelViewSet):
         review = self.review()
         serializer.save(author=self.request.user, review=review)
 
-    def update(self, request, *args, **kwargs):
-        user = self.request.user
-
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(
-            instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-
-        if user.is_usr and instance.author != user:
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
-        self.perform_update(serializer)
-
-        return Response(serializer.data)
-
-    def destroy(self, request, *args, **kwargs):
-        # Если у юзера роль 'user' и он хочет удалить коммент
-        instance = self.get_object()
-        user = self.request.user
-        auth = user.is_authenticated
-
-        # Даем ему 403 вместо 401 которые по умолчанию выдают пермишины
-        if user.is_usr or not auth:
-            return Response(status=status.HTTP_403_FORBIDDEN)
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+# Неплохо сократили тут
