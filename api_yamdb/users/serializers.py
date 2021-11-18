@@ -7,17 +7,30 @@ from .models import User
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         required=True,
-        validators=[UniqueValidator(queryset=User.objects.all())]
     )
     username = serializers.CharField(
         required=True,
-        validators=[UniqueValidator(queryset=User.objects.all())]
     )
 
     def validate(self, attrs):
         if attrs['username'] == 'me':
             raise serializers.ValidationError(
                 {"username": "Имя пользователя не может быть 'me'"})
+
+        user_by_email = User.objects.filter(
+            email=attrs['email']).exists()
+        user_by_username = User.objects.filter(
+            username=attrs['username']).exists()
+
+        # Проверка на связь почты и юзернейма
+        not_valid = user_by_email != user_by_username
+        if user_by_email and not_valid:
+            raise serializers.ValidationError(
+                {"email": f"Адрес '{attrs['email']}' уже занят"})
+        if user_by_username and not_valid:
+            raise serializers.ValidationError(
+                {"username": f"Юзернейм '{attrs['username']}' уже занят"})
+
         return attrs
 
     def create(self, validated_data):

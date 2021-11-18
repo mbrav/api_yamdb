@@ -53,3 +53,6 @@ class User(AbstractUser):
     def get_short_name(self):
         """ Аналогично с методом get_full_name(). """
         return self.username
+
+    class Meta():
+        unique_together = ('email', 'username')
