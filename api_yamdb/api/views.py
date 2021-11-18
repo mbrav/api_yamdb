@@ -148,7 +148,6 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         user = self.request.user
-        auth = user.is_authenticated
 
         partial = kwargs.pop('partial', False)
         instance = self.get_object()

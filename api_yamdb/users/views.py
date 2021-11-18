@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import filters, generics, permissions, status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
+from rest_framework.decorators import action
 
 from .serializers import (RegisterSerializer, UserCreateSerializer,
                           UserLoginSerializer, UserUpdateSerializer)
@@ -135,6 +136,13 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_403_FORBIDDEN)
 
         self.perform_update(serializer)
+        return Response(serializer.data)
+
+    @action(methods=['get'], detail=True, name='me')
+    def me(self, request, pk=None):
+        user = self.get_object()
+        obj = get_object_or_404(User, user=user)
+        serializer = self.get_serializer(obj)
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
