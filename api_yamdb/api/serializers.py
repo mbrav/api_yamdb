@@ -1,4 +1,6 @@
 import datetime as dt
+
+from django.db import models
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from reviews.models import Category, Comment, Genre, Review, Title
@@ -25,6 +27,15 @@ class TitleSerializer(serializers.ModelSerializer):
         read_only=True,
         many=True
     )
+
+    rating = serializers.SerializerMethodField(
+        read_only=True,
+        method_name='get_rating')
+
+    def get_rating(self, obj):
+        reviews = obj.reviews.all()
+        score_avg = reviews.aggregate(models.Avg('score')).get('score__avg')
+        return None if isinstance(score_avg, type(None)) else int(score_avg)
 
     class Meta:
         model = Title

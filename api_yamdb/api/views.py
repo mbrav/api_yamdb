@@ -4,13 +4,13 @@ from django.shortcuts import get_object_or_404
 from django_filters import CharFilter, FilterSet, NumberFilter
 from django_filters.filters import NumberFilter
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, status, viewsets
+from rest_framework import filters, status, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from reviews.models import Category, Genre, Review, Title
 
 from .permissions import (IsAdminOrReadOnly, IsAdminUser,
-                          ReadOnly)
+                          IsAuthorOrReadOnlyPermission, ReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer,
                           TitlePostSerializer, TitleSerializer)
@@ -90,7 +90,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAuthorOrReadOnlyPermission,)
 
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
@@ -130,11 +130,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAuthorOrReadOnlyPermission,)
 
     def review(self):
         review_id = self.kwargs.get('review_id')
-        return get_object_or_404(Review, id=review_id)
+        title_id = self.kwargs.get('title_id')
+        return get_object_or_404(Review, id=review_id, title_id=title_id)
 
     def get_queryset(self):
         review = self.review()
@@ -142,16 +143,12 @@ class CommentViewSet(viewsets.ModelViewSet):
         return comments
 
     def perform_create(self, serializer):
-        if self.request.user.is_authenticated is False:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
         review = self.review()
         serializer.save(author=self.request.user, review=review)
 
     def update(self, request, *args, **kwargs):
         user = self.request.user
         auth = user.is_authenticated
-        if not auth:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
 
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
@@ -164,19 +161,15 @@ class CommentViewSet(viewsets.ModelViewSet):
 
         self.perform_update(serializer)
 
-        if getattr(instance, '_prefetched_objects_cache', None):
-            # If 'prefetch_related' has been applied to a queryset, we need to
-            # forcibly invalidate the prefetch cache on the instance.
-            instance._prefetched_objects_cache = {}
-
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
         # Если у юзера роль 'user' и он хочет удалить коммент
-        # Даем ему 403
         instance = self.get_object()
         user = self.request.user
         auth = user.is_authenticated
+
+        # Даем ему 403 вместо 401 которые по умолчанию выдают пермишины
         if user.is_usr or not auth:
             return Response(status=status.HTTP_403_FORBIDDEN)
         self.perform_destroy(instance)

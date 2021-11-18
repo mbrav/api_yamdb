@@ -1,3 +1,5 @@
+import datetime as dt
+
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -44,7 +46,10 @@ class Genre(models.Model):
 class Title(models.Model):
 
     name = models.CharField(max_length=100)
-    year = models.IntegerField()
+
+    # Валидатор на год
+    year = models.IntegerField(
+        validators=[MaxValueValidator(dt.datetime.today().year)])
     description = models.TextField()
     genre = models.ManyToManyField(
         Genre,
@@ -62,12 +67,6 @@ class Title(models.Model):
     class Meta:
         verbose_name = 'Title'
         verbose_name_plural = 'Titles'
-
-    @property
-    def rating(self):
-        reviews = self.reviews.all()
-        score_avg = reviews.aggregate(models.Avg('score')).get('score__avg')
-        return None if isinstance(score_avg, type(None)) else int(score_avg)
 
     def __str__(self):
         return self.name
