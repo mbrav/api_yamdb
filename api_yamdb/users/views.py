@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 
 from .serializers import (RegisterSerializer, UserCreateSerializer,
-                          UserLoginSerializer, UserUpdateSerializer)
+                          UserLoginSerializer, UserSerializer)
 from .utils import Util
 
 User = get_user_model()
@@ -92,79 +92,37 @@ class UserViewSet(viewsets.ModelViewSet):
     Вюшка для Users.
     """
 
+    queryset = User.objects.all()
     permission_classes = (IsAdminUserOrOwner,)
     filter_backends = (filters.SearchFilter,)
     lookup_field = 'username'
     search_fields = ('username',)
 
-    def get_queryset(self):
-        if self.request.user.is_stf:
-            return User.objects.all()
-        else:
-            return User.objects.filter(username=self.request.user.username)
+    @action(detail=False, methods=['patch', 'get'])
+    def me(self, request):
+        user = get_object_or_404(User, id=request.user.id)
 
-    def get_object(self):
-        username = self.kwargs.get(self.lookup_field)
-        if username == 'me':
-            username = self.request.user.username
-        if username:
-            obj = get_object_or_404(User, username=username)
-            self.check_object_permissions(self.request, obj)
-            return obj
+        if request.method == 'GET':
+            serializer = self.get_serializer(user)
+            return Response(serializer.data)
 
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(
-            instance, data=request.data, partial=partial)
-        user = request.user
-        serializer.is_valid(raise_exception=True)
+        if request.method == 'PATCH':
+            serializer = self.get_serializer(
+                user, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
 
-        # Пользователь с ролью 'user' может изменять свою
-        # информацию только через слаг 'me' а не через слаг
-        # своего юзернейма
-        username = self.kwargs.get(self.lookup_field)
-        if user.is_usr and username == user.username:
-            return Response(serializer.data, status=status.HTTP_403_FORBIDDEN)
-
-        # Проверка на попытку пользователь с ролью 'user'
-        # на эскалацию своего статуса через изменение поля 'role'
-        # на что-тo кроме значения 'user'
-        if (user.is_usr
-                and serializer.validated_data.pop('role', 'user')
-                != user.USER):
-            return Response(serializer.data, status=status.HTTP_403_FORBIDDEN)
-
-        self.perform_update(serializer)
-        return Response(serializer.data)
-
-    @action(methods=['get'], detail=True, name='me')
-    def me(self, request, pk=None):
-        user = self.get_object()
-        obj = get_object_or_404(User, user=user)
-        serializer = self.get_serializer(obj)
-        return Response(serializer.data)
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-
-        # Все пользователи не имеют право совершать суицид
-        # от своего имени, не зависимо от статуса
-        username = self.kwargs.get(self.lookup_field)
-        if username == 'me':
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-        # Только админы имеют право убивать
-        if not request.user.is_admin:
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+            # Проверка на попытку пользователь с ролью 'user'
+            # на эскалацию своего статуса через изменение поля 'role'
+            # на что-тo кроме значения 'user'
+            if (user.is_usr
+                    and serializer.validated_data.pop('role', 'user')
+                    != user.USER):
+                return Response(serializer.data, status=status.HTTP_403_FORBIDDEN)
+            self.perform_update(serializer)
+            return Response(serializer.data)
 
     def get_serializer_class(self):
-        # Кастомные сериалайзеры для POST и PATCH
-        request_action = self.get_serializer_context()[
-            'request']._request.method
-        if request_action != "POST":
-            return UserUpdateSerializer
-        return UserCreateSerializer
+        # Кастомный сериалайзер для POST
+        if self.request.method == 'POST':
+            return UserCreateSerializer
+        return UserSerializer

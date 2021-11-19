@@ -69,14 +69,17 @@ class IsAdminUserOrOwner(permissions.BasePermission):
         Без тщательной проверки, доступ к объектам закрыт.
         """
 
-        SAFE_ACTIONS = ('retrieve', 'partial_update', 'destroy')
-
+        test = view.action, request.method
+        SAFE_ACTIONS = ('retrieve', 'partial_update',
+                        'destroy', 'me')
+        SAFE_METHODS = ('GET', 'HEAD', 'OPTIONS')
         auth = bool(request.user and request.user.is_authenticated)
         if not auth:
             return False
-        if view.action in SAFE_ACTIONS:
+
+        if view.action in SAFE_ACTIONS and request.user.is_usr or request.user.is_admin:
             return True
-        return bool(request.user and request.user.is_admin)
+        return request.user.is_admin or request.user.is_mod
 
     def has_object_permission(self, request, view, obj):
         """"
@@ -87,4 +90,20 @@ class IsAdminUserOrOwner(permissions.BasePermission):
 
         user = request.user
         is_owner = obj == user
+
+        # Пользователь с ролью 'user' может изменять свою
+        # информацию только через слаг 'me' а не через слаг
+        # своего юзернейма
+        if request.method == 'PATCH' and view.action != 'me' and user.is_usr:
+            return False
+
+        # Все пользователи не имеют право совершать суицид
+        # от своего имени, не зависимо от статуса
+        if request.method == 'DELETE' and view.action == 'me':
+            return False
+
+        # Только админы имеют право убивать
+        if request.method == 'DELETE':
+            return user.is_admin
+
         return user.is_admin or is_owner

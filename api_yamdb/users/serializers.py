@@ -62,7 +62,23 @@ class UserLoginSerializer(serializers.Serializer):
     )
 
 
-class UserCreateSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
+    """
+    User сериализатор для PATCH запросов с отключенной
+    проверкой на username и email.
+    """
+
+    class Meta:
+        model = User
+        lookup_field = 'username'
+        fields = ('username', 'email', 'role',
+                  'first_name', 'last_name', 'bio')
+        extra_kwargs = {
+            'password': {'required': False},
+        }
+
+
+class UserCreateSerializer(UserSerializer):
     """
     User сериализатор для POST запросов с включенной
     проверкой на username и email.
@@ -85,37 +101,4 @@ class UserCreateSerializer(serializers.ModelSerializer):
         if User.objects.filter(email=email).exists():
             raise serializers.ValidationError(
                 {'email': 'Пользователь с данной почтой уже существует'})
-        return email
-
-    class Meta:
-        model = User
-        lookup_field = 'username'
-        fields = ('username', 'email', 'role',
-                  'first_name', 'last_name', 'bio')
-        extra_kwargs = {
-            'password': {'required': False},
-        }
-
-
-class UserUpdateSerializer(UserCreateSerializer):
-    """
-    User сериализатор для PATCH запросов с отключенной
-    проверкой на username и email.
-    """
-
-    username = serializers.CharField(
-        required=False,
-    )
-    email = serializers.EmailField(
-        required=False,
-    )
-
-    def __init__(self, *args, **kwargs):
-        kwargs['partial'] = True
-        super(UserUpdateSerializer, self).__init__(*args, **kwargs)
-
-    def validate_username(self, username):
-        return username
-
-    def validate_email(self, email):
         return email
