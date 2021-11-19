@@ -1,10 +1,11 @@
-from api.permissions import IsAdminUserOrOwner
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, generics, permissions, status, viewsets
 from rest_framework.authtoken.models import Token
-from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.response import Response
+
+from api.permissions import IsAdminUserOrOwner
 
 from .serializers import (RegisterSerializer, UserCreateSerializer,
                           UserLoginSerializer, UserSerializer)
@@ -115,9 +116,12 @@ class UserViewSet(viewsets.ModelViewSet):
             # на эскалацию своего статуса через изменение поля 'role'
             # на что-тo кроме значения 'user'
             if (user.is_usr
-                    and serializer.validated_data.pop('role', 'user')
+                    and serializer.validated_data.pop(
+                        'role', 'user')
                     != user.USER):
-                return Response(serializer.data, status=status.HTTP_403_FORBIDDEN)
+                return Response(
+                    serializer.data,
+                    status=status.HTTP_403_FORBIDDEN)
             self.perform_update(serializer)
             return Response(serializer.data)
 

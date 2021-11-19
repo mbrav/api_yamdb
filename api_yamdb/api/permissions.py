@@ -18,7 +18,7 @@ class IsAuthorOrReadOnlyPermission(permissions.IsAuthenticatedOrReadOnly):
 
     def has_object_permission(self, request, view, obj):
         """"
-        Проверка разрешения на объект 
+        Проверка разрешения на объект
         """
 
         auth = bool(request.user and request.user.is_authenticated)
@@ -69,22 +69,23 @@ class IsAdminUserOrOwner(permissions.BasePermission):
         Без тщательной проверки, доступ к объектам закрыт.
         """
 
-        test = view.action, request.method
         SAFE_ACTIONS = ('retrieve', 'partial_update',
                         'destroy', 'me')
-        SAFE_METHODS = ('GET', 'HEAD', 'OPTIONS')
+
         auth = bool(request.user and request.user.is_authenticated)
         if not auth:
             return False
 
-        if view.action in SAFE_ACTIONS and request.user.is_usr or request.user.is_admin:
+        if not request.user.is_admin:
+            if view.action == 'list':
+                return False
+            if request.method == 'POST':
+                return False
+
+        if view.action in SAFE_ACTIONS:
             return True
 
-        if view.action == 'list' and not request.user.is_admin:
-            return False
-        if request.method == 'POST' and not request.user.is_admin:
-            return False
-        return request.user.is_admin or request.user.is_mod
+        return request.user.is_stf
 
     def has_object_permission(self, request, view, obj):
         """"
