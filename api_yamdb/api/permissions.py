@@ -79,6 +79,11 @@ class IsAdminUserOrOwner(permissions.BasePermission):
 
         if view.action in SAFE_ACTIONS and request.user.is_usr or request.user.is_admin:
             return True
+
+        if view.action == 'list' and not request.user.is_admin:
+            return False
+        if request.method == 'POST' and not request.user.is_admin:
+            return False
         return request.user.is_admin or request.user.is_mod
 
     def has_object_permission(self, request, view, obj):
