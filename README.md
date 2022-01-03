@@ -1,3 +1,5 @@
+[![Django and Pytest](https://github.com/mbrav/api_yamdb/actions/workflows/pytest.yml/badge.svg)](https://github.com/mbrav/api_yamdb/actions/workflows/pytest.yml)
+
 ## Проект api_yamdb
 
 Проект YaMDb собирает отзывы (Review) пользователей на произведения (Title). Произведения делятся на категории: «Книги», «Фильмы», «Музыка». Список категорий (Category) может быть расширен (например, можно добавить категорию «Изобразительное искусство» или «Ювелирка»).
